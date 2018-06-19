@@ -54,8 +54,8 @@ if(args.ts): # set new time step if needed
 corr = np.zeros((mnum,dy.shape[1])) # initalize array
 xt = np.arange(mnum)*dt # initalize array
 
-avg = np.zeros((dy.shape[0],dy.shape[1]))
-avg = np.average(dy) # average down columns?
+avg = np.zeros((dy.shape[1]))
+avg = np.average(dy,axis=0) # average down columns?
 
 print "Averages: ",avg
 print "Variance: ",np.var(dy)
