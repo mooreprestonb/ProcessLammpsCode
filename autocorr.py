@@ -40,7 +40,7 @@ print "time data",dy.shape
 
 dt = x[1]-x[0]
 for i in range(1,time):
-    if ( abs(((x[i]-x[i-1])-dt)/dt) ):
+    if ( abs(((x[i]-x[i-1])-dt)/dt) >tol):
         print "Warning steps not equal at step i",i,x[i],x[i-1],dt
         
 if (args.n == -1): # set numbers to correlate

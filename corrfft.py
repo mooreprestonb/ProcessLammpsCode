@@ -11,7 +11,7 @@ from scipy.fftpack import dct, idct # direct and inverst cosine transform
 
 parser = argparse.ArgumentParser(description='Fourier Transform of data')
 parser.add_argument('input', help="input file")
-parser.add_argument('output', help="output file")
+parser.add_argument('output', nargs='?', help="output file")
 parser.add_argument('-n',type=int,default=1,help="column to transform")
 parser.add_argument("-ct",help="Perform cosine transform",action="store_true")
 parser.add_argument("-w",help="Scale from 1/fs to 1/cm",action="store_true")
@@ -47,12 +47,17 @@ ftcorr = np.fft.rfft(y)
 print "Doing rfft", xt.shape, ftcorr.shape
 outa = np.column_stack((xf[:ftcorr.shape[0]],np.real(ftcorr)))  # 
 hdr += " fft"
-output = args.output + ".fft"
+
+if(args.output==None):
+    output = args.input + ".fft"
+else:
+    output = args.output
+
 np.savetxt(output,outa,fmt="%f",header=hdr + " fft") # output with x y format
 
 if(args.ct):
     dctcorr = dct(y,type=1)
-    output = args.output + ".cos"
+    output += ".cos"
     outa = np.column_stack((xf/2.0,dctcorr))  # 
     np.savetxt(output,outa,fmt="%f",header=(hdr + " cos")) # output with x y format
     
