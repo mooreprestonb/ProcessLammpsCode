@@ -16,7 +16,7 @@ def indexline(al,value):
             if w[0] == value: 
                 break
     if n == len(al):
-        print "Error, can't fine", value
+        print "Warning, can't fine", value
 #        exit(1)    
     return n
 #----------------------------
@@ -126,7 +126,8 @@ for x in lines:
             gindx.append(int(w[1])) # group index
         if w[0] == "Atoms": # start counting Atoms!
             natm = 0
-            hl = nl
+            hl = nl # set header line count!
+            
 print "natoms found = ",natm
 
 if (natm != natoms):  # error check
@@ -171,9 +172,9 @@ nl = indexline(lines,"Atoms")
 vl = indexline(lines,"Velocities")
 bl = indexline(lines,"Bonds")
 al = indexline(lines,"Angles")
-#dl = indexline(lines,"Diheadrals")
-#dl = indexline(lines,"Impropers")
-dl = len(lines)+1
+dl = indexline(lines,"Dihedrals")
+il = indexline(lines,"Impropers")
+#dl = len(lines)+1
 
 #print "Velocities"
 #print
@@ -205,10 +206,21 @@ for i in range(bl+1,al-1):
 f.write("\n")
 print "Wrote Bonds"
 
+#Find nangles 
+for i in range(hl):
+    #print x.rstrip()
+    if(re.search("angles",lines[i])):
+        w = lines[i].rstrip().split()
+        nangles = int(w[0])
+        break
+
+print "Nangles = ",nangles
+if not (nangles == (dl-al-3)):
+    print "Warning nangles do not match lines to dihedrals",nangles,dl-al-3
+
 f.write("Angles\n\n")
-for i in range(al+1,dl-1):
-    w = lines[i].rstrip().split()
-    # print w
+for i in range(nangles):
+    w = lines[i+al+1].rstrip().split()
     if w: # skip over blank lines
         l = w[0] + " " + w[1] + " "
         ni = int(w[2])
@@ -225,12 +237,24 @@ for i in range(al+1,dl-1):
         
         f.write(l) 
 f.write("\n")
+print "Wrote Angles",nangles
 
-print "Wrote Angles"
+#Find ndihedrals
+ndihedrals = 0
+for i in range(hl):
+    #print x.rstrip()
+    if(re.search("dihedrals",lines[i])):
+        w = lines[i].rstrip().split()
+        ndihedrals = int(w[0])
+        break
+
+print "ndihedrals = ",ndihedrals
+if not (ndihedrals == (il-dl-3)):
+    print "Warning nangles do not match lines to impropers",ndihedrals,il-dl-3
 
 f.write("Dihedrals\n\n")
-for i in range(dl+1,len(lines)):
-    w = lines[i].rstrip().split()
+for i in range(ndihedrals):
+    w = lines[i+dl+1].rstrip().split()
     # print w
     if w: # skip over blank lines
         l = w[0] + " " + w[1] + " "  # dihedral # and type
@@ -253,3 +277,48 @@ for i in range(dl+1,len(lines)):
 
         f.write(l)
 f.write("\n")
+print "Wrote Dihedrals",ndihedrals
+
+#Find impropers
+nimpropers = 0
+for i in range(hl):
+    #print x.rstrip()
+    if(re.search("impropers",lines[i])):
+        w = lines[i].rstrip().split()
+        nimpropers = int(w[0])
+        break
+
+print "nimpropers = ",nimpropers
+if not (nimpropers == (il-len(lines))):
+    print "Warning nangles do not match lines to impropers",nimpropers,len(lines)
+
+
+if(nimpropers):
+    f.write("Impropers\n\n")
+for i in range(nimpropers):
+    w = lines[i+nimpropers+1].rstrip().split()
+    # print w
+    if w: # skip over blank lines
+        l = w[0] + " " + w[1] + " "  # dihedral # and type
+
+        ni = int(w[2])
+        n1 = aridx.index(indx.index(ni))+1
+        l += str(n1) + " "
+
+        ni = int(w[3]) 
+        n1 = aridx.index(indx.index(ni))+1
+        l += str(n1) + " "
+        
+        ni = int(w[4])
+        n1 = aridx.index(indx.index(ni))+1
+        l += str(n1) + " "
+
+        ni = int(w[5])
+        n1 = aridx.index(indx.index(ni))+1
+        l += str(n1) + "\n"
+
+        f.write(l)
+if(nimpropers):
+    f.write("\n")
+
+print "Wrote Impropers",nimpropers

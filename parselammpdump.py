@@ -4,31 +4,47 @@ import argparse
 
 #setup arguments to use in argparse (argument parsing)
 
-parser = argparse.ArgumentParser(description='Get seperate files and total dipoles for each mol from dipole.out output (time mux muy muz tdp')
+parser = argparse.ArgumentParser(description='Parse lammps custum dump id mol type x y z vx vy vz')
 parser.add_argument('input', help="input file")
-parser.add_argument("-td",help="Get total dipole only",action="store_false")
 args = parser.parse_args()
 
 print args
 
 fp = open(args.input)
 
-# read header
-while(1):
-    line = fp.readline()
-    if not line:
-        break
-    if not (line[0] == '#'):
-        break
+# read header 
 
-nmol = int(line.split()[1])
-step = float(line.split()[0])
-print "read in header, looping over configs, with",nmol,"molecules"
+line = fp.readline() # ITEM: TIMESTEP
+line = fp.readline() # ts
+line = fp.readline() # ITEM: NUMBER OF ATOMS
+line = fp.readline() # natoms
+natoms = int(line.split()[0])
+print "natoms =",natoms
+line = fp.readline() # ITEM: BOX BOUNDS pp pp pp
+line = fp.readline() # xlo xhi
+line = fp.readline() # ylo yhi
+line = fp.readline() # zlo zhi
+line = fp.readline() # ITEM: ATOMS id mol type x y z vx vy vz
+
+atoms = {} # use dictonaries, with atom id as keys
+    
+for i in range(natoms):
+    line = fp.readline() # ITEM: ATOMS id mol type x y z vx vy vz
+    id = int(line.split()[0])
+    atoms[id] = line
+
+for i in range(1,natoms+1):
+    if not (i in atoms):
+        print "key: ",i, "not found"
+        exit(1)
+exit(1)
+
+print "Read in header, looping over configs, with",nmol,"molecules"
 print "Opening files"
 
 if(args.td):
     fo = []
-    for i in range(nmol):
+    for i in range(1,nmol):
         name = args.input + "." + str(i+1)
         fo.append(open(name,"w"))
 

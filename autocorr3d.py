@@ -8,7 +8,7 @@ import math
 
 #setup arguments to use in argparse (argument parsing)
 
-parser = argparse.ArgumentParser(description='Autocorrelate data (time data1 data2 ...)')
+parser = argparse.ArgumentParser(description='Autocorrelate 3d data (time x y z)')
 parser.add_argument('input', help="input file")
 parser.add_argument('output', nargs='?', help="output file")
 parser.add_argument('-n',type=int,default=-1,help="#'s to correllate")
@@ -16,8 +16,7 @@ parser.add_argument('-ts',type=float,help="set time step i.e dt")
 parser.add_argument('-rp',type=int,default=10,help="Report progress every \"rp\" steps")
 parser.add_argument("-av",help="do NOT subtract average",action="store_true")
 parser.add_argument("-s",help="Scale C[0] to 1",action="store_true")
-parser.add_argument("-gr",help="Graph results",action="store_true")
-parser.add_argument("-td",help="Average Correlation functions",action="store_true")
+parser.add_argument("-g",help="Graph results",action="store_true")
 args = parser.parse_args()
 
 print args
@@ -33,7 +32,7 @@ time = 0
 tol = 1e-8
 
 x = data[:,0] # First column
-dy = np.array(data[:,1:]) # all other columns
+dy = np.array(data[:,1:4]) # next 3 columns
 time = x.shape[0]
 
 print "time data",dy.shape
@@ -51,10 +50,10 @@ else:
 if(args.ts): # set new time step if needed
     dt = args.ts
     
-corr = np.zeros((mnum,dy.shape[1])) # initalize array
+corr = np.zeros(mnum) # initalize array
 xt = np.arange(mnum)*dt # initalize array
 
-avg = np.zeros((dy.shape[1]))
+avg = np.zeros(3)
 avg = np.average(dy,axis=0) # average down columns?
 
 print "Averages: ",avg
@@ -74,11 +73,10 @@ for i in range(time):
         print i,"/",time
 
     # slice out what we want i to i+mnum (time window)
-    for j in range(dy.shape[1]):
-        y = dy[i:min(time,i+mnum),j]
-        y0 = y[0] # slice out step i
-        corrd = np.dot(y,y0)  # correlate step i using numpy dot product with i .. i+mnum
-        corr[:corrd.shape[0],j] += corrd # add to corr column j with correct shape
+    y = dy[i:min(time,i+mnum)]
+    y0 = y[0] # slice out step i
+    corrd = np.dot(y,y0)  # correlate step i using numpy dot product with i .. i+mnum
+    corr[:corrd.shape[0]] += corrd # add to corr column j with correct shape
 
 #print "Corr:",corr
 
@@ -86,11 +84,6 @@ print "Done Correlating: writing out"
     
 for i in range(mnum): # average 
     corr[i] = corr[i]/(time-i) #(c[0] has ntime data, c[1] has ntime-1 data etc)
-
-if(args.td):
-    print "Summing"
-    td = np.zeros(mnum) # initalize array
-    td = np.sum(corr,axis=1) #
     
 # print corr,corrtd
 print ", Now C[0] = ",corr[0]
@@ -101,23 +94,18 @@ if(args.s): # scale to 1
     if(args.td):
         td = td/td[0] # scale to 1
 
-if(args.td):
-    outa = np.column_stack((xt,corr,td))  # need to pass one argument to get x y
-else:
-    outa = np.column_stack((xt,corr))  # need to pass one argument to get x y
+outa = np.column_stack((xt,corr))  # need to pass one argument to get x y
 
 if(args.output==None):
-    output = args.input + ".corr"
+    output = args.input + ".corr3d"
 else:
     output = args.output
 
 np.savetxt(output,outa,fmt="%f",header=hdr) # output with x y z format
     
-if(args.gr): # use graphs
+if(args.g): # use graphs
     print "Creating graphs"
     plt.plot(xt,corr,label="Correlated data")
-    if(args.td):
-        plot(xt,corr,label="Total")
     plt.legend()
     plt.show()
 
